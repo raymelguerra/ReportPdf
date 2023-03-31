@@ -201,7 +201,7 @@ def read_report(id: int, db: Session = Depends(get_db)):
 def create_pdf(buffer, db_report,contractor_service_log):
     c = canvas.Canvas(buffer, pagesize=A4)
     # Creando las entradas
-    c.drawImage('D:\\logo.png', 260, 720, 100, 100)
+    c.drawImage('logo.png', 260, 720, 100, 100)
     c.line(30, 700, 580, 700)
     c.drawString(400, 703, "ANALYST SERVICE LOG")
     c.line(100, 650, 300, 650)
