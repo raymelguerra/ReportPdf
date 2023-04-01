@@ -15,6 +15,8 @@ from sqlalchemy.orm import Session
 from fastapi.responses import Response
 from fastapi import HTTPException
 from fastapi import FastAPI, Depends
+from fastapi.responses import FileResponse
+
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -172,7 +174,7 @@ def get_db():
 
 
 @app.get("/generar/{id}/pdf")
-def read_report(id: int, db: Session = Depends(get_db)):
+def read_report(id: int, db: Session = Depends(get_db))-> FileResponse:
     db_report = db.query(ServiceLog) \
         .join(Contractor, Contractor.Id == ServiceLog.ContractorId, isouter=True) \
         .join(Client,Client.Id == ServiceLog.ClientId, isouter=True) \
