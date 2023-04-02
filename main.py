@@ -64,6 +64,7 @@ class Contractor(Base):
     servicelogc = relationship("ServiceLog", back_populates="contractor")
     payroll = relationship("Payroll", back_populates="contractor")
 
+
 class Client(Base):
     __tablename__ = "Client"
     Id = Column(Integer, primary_key=True, index=True)
@@ -71,16 +72,17 @@ class Client(Base):
 
     servicelogL = relationship("ServiceLog", back_populates="client")
 
+
 class UnitDetail(Base):
     __tablename__ = "UnitDetail"
     Id = Column(Integer, primary_key=True, index=True)
     Modifiers = Column(String)
-    PlaceOfServiceId= Column(Integer, ForeignKey('PlaceOfService.Id'))
+    PlaceOfServiceId = Column(Integer, ForeignKey('PlaceOfService.Id'))
     placeofservice = relationship("PlaceOfService", back_populates="unitdetail")
-    DateOfService= Column(DateTime)
+    DateOfService = Column(DateTime)
     Unit = Column(Integer)
     ServiceLogId = Column(Integer, ForeignKey('ServiceLog.Id'))
-    servicelog =relationship("ServiceLog", back_populates="unitdetails")
+    servicelog = relationship("ServiceLog", back_populates="unitdetails")
     SubProcedureId = Column(Integer, ForeignKey('SubProcedure.Id'))
     subprocedure = relationship("SubProcedure", back_populates="unitdetailsp")
     patientunitdetail = relationship("PatientUnitDetail", back_populates="unitdetailp")
@@ -89,9 +91,9 @@ class UnitDetail(Base):
 class PatientUnitDetail(Base):
     __tablename__ = "PatientUnitDetail"
     Id = Column(Integer, primary_key=True, index=True)
-    UnitDetailId= Column(Integer, ForeignKey('UnitDetail.Id'))
-    unitdetailp=relationship("UnitDetail", back_populates="patientunitdetail")
-    SignatureDate= Column(DateTime)
+    UnitDetailId = Column(Integer, ForeignKey('UnitDetail.Id'))
+    unitdetailp = relationship("UnitDetail", back_populates="patientunitdetail")
+    SignatureDate = Column(DateTime)
     Signature = Column(String)
     EntryTime = Column(String)
     DepartureTime = Column(String)
@@ -103,7 +105,8 @@ class PlaceOfService(Base):
     Name = Column(String)
     Value = Column(String)
 
-    unitdetail=relationship("UnitDetail", back_populates="placeofservice")
+    unitdetail = relationship("UnitDetail", back_populates="placeofservice")
+
 
 class SubProcedure(Base):
     __tablename__ = "SubProcedure"
@@ -121,7 +124,8 @@ class Procedure(Base):
     Name = Column(String)
     Rate = Column(Integer)
     subprocedure = relationship("SubProcedure", back_populates="procedure")
-    payroll =relationship("Payroll", back_populates="procedure")
+    payroll = relationship("Payroll", back_populates="procedure")
+
 
 class Payroll(Base):
     __tablename__ = "Payroll"
@@ -142,18 +146,19 @@ class ContractorType(Base):
     Name = Column(String)
     payroll = relationship("Payroll", back_populates="contractortype")
 
+
 class Company(Base):
     __tablename__ = "Company"
     Id = Column(Integer, primary_key=True, index=True)
     Name = Column(String)
     Acronym = Column(String)
-    Enable = Column(Boolean)
+    Enabled = Column(Boolean)
     payroll = relationship("Payroll", back_populates="company")
 
 
-
 metadata = MetaData()
-engine = create_engine('postgresql://linpostgres:HxywGpAs2-2CnbGh@lin-13704-4133-pgsql-primary.servers.linodedb.net:5432/aba_test')
+engine = create_engine(
+    'postgresql://linpostgres:HxywGpAs2-2CnbGh@lin-13704-4133-pgsql-primary.servers.linodedb.net:5432/aba_test')
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 Base.metadata.create_all(bind=engine)
@@ -170,13 +175,12 @@ def get_db():
         db.close()
 
 
-
 @app.get("/generar/{id}/pdf")
 def read_report(id: int, db: Session = Depends(get_db)):
     db_report = db.query(ServiceLog) \
         .join(Contractor, Contractor.Id == ServiceLog.ContractorId, isouter=True) \
-        .join(Client,Client.Id == ServiceLog.ClientId, isouter=True) \
-        .join(Period,Period.Id == ServiceLog.PeriodId, isouter=True) \
+        .join(Client, Client.Id == ServiceLog.ClientId, isouter=True) \
+        .join(Period, Period.Id == ServiceLog.PeriodId, isouter=True) \
         .join(Payroll, Payroll.ContractorId == Contractor.Id, isouter=True) \
         .join(Company, Company.Id == Payroll.CompanyId, isouter=True) \
         .join(ContractorType, ContractorType.Id == Payroll.ContractorTypeId, isouter=True) \
@@ -191,17 +195,24 @@ def read_report(id: int, db: Session = Depends(get_db)):
     if db_report is None:
         raise HTTPException(status_code=404, detail="Report not found")
     contractor_service_log = db.query(ContractorServiceLog).filter(ContractorServiceLog.ServiceLogId == id).first()
-    pdf_bytes = create_pdf(BytesIO(), db_report,contractor_service_log)
+    company = db.query(Company).join(Payroll, Payroll.CompanyId ==Company.Id,isouter=True) \
+                               .join(Contractor, Contractor.Id ==Payroll.ContractorId , isouter=True) \
+                               .join(ServiceLog,ServiceLog.ContractorId ==Contractor.Id, isouter=True) \
+                               .filter(ServiceLog.Id==id).first()
+    pdf_bytes = create_pdf(BytesIO(), db_report, contractor_service_log,company)
 
     headers = {'Content-Disposition': f'inline;filename=sala_{db_report}.pdf'}
 
     return Response(content=pdf_bytes, media_type='application/pdf', headers=headers)
 
 
-def create_pdf(buffer, db_report,contractor_service_log):
+def create_pdf(buffer, db_report, contractor_service_log,company):
     c = canvas.Canvas(buffer, pagesize=A4)
     # Creando las entradas
-    c.drawImage('logo.png', 260, 720, 100, 100)
+    if company.Name=="Expanding Possibilities":
+       c.drawImage('expanding.png', 260, 720, 100, 100)
+    elif company.Name == "Villa Lyan":
+        c.drawImage('villa.png', 260, 720, 100, 100)
     c.line(30, 700, 580, 700)
     c.drawString(400, 703, "ANALYST SERVICE LOG")
     c.line(100, 650, 300, 650)
@@ -218,6 +229,25 @@ def create_pdf(buffer, db_report,contractor_service_log):
     c.line(470, 30, 510, 30)
     c.drawString(515, 30, 'DATE:')
     c.line(550, 30, 590, 30)
+
+    try:
+        if contractor_service_log is not None:
+            contractorsig = contractor_service_log.Signature
+            with tempfile.NamedTemporaryFile(delete=False) as archivo_temporal:
+                archivo_temporal.write(base64.b64decode(contractorsig))
+                ruta_imagen_temporal = archivo_temporal.name
+                c.drawImage(ruta_imagen_temporal, 440, 600, 70, 30)
+                archivo_temporal.close()
+        else:
+            c.setStrokeColorRGB(1, 1, 1)
+            c.setFillColorRGB(1, 1, 1)
+            c.rect(440, 605, 70, 30, fill=True)
+    except:
+        c.setStrokeColorRGB(1, 1, 1)
+        c.setFillColorRGB(1, 1, 1)
+        c.rect(440, 605, 70, 30, fill=True)
+
+
 
     width, height = A4
     data = [['Date', 'Arrival time', 'Depart time', 'Units', 'Hours', 'CPT Code',
@@ -238,10 +268,10 @@ def create_pdf(buffer, db_report,contractor_service_log):
             imagen_reader = io.BytesIO(imagen_bytes)
             imagen = ReportLabImage(imagen_reader, width=0.7 * inch, height=0.3 * inch)
             data.append([formatted_date, patient_unit.EntryTime, patient_unit.DepartureTime,
-                         patient_unit.unitdetailp.Unit,hours, patient_unit.unitdetailp.subprocedure.Name,
-                         patient_unit.unitdetailp.placeofservice.Value, '',imagen])
-#
-    t = Table(data, colWidths=[70] + [60] * 2+[40]+[60]*4+[80])
+                         patient_unit.unitdetailp.Unit, hours, patient_unit.unitdetailp.subprocedure.Name,
+                         patient_unit.unitdetailp.placeofservice.Value, '', imagen])
+    #
+    t = Table(data, colWidths=[70] + [60] * 2 + [40] + [60] * 4 + [80])
     t.setStyle([("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                 ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
@@ -297,36 +327,17 @@ def create_pdf(buffer, db_report,contractor_service_log):
     p.wrapOn(c, 600, 650)
     p.drawOn(c, 58, 58)
 
-    try:
-        if contractor_service_log is not None:
-            contractorsig = contractor_service_log.Signature
-            with tempfile.NamedTemporaryFile(delete=False) as archivo_temporal:
-                archivo_temporal.write(base64.b64decode(contractorsig))
-                ruta_imagen_temporal = archivo_temporal.name
-                c.drawImage(ruta_imagen_temporal, 440, 600, 70, 30)
-        else:
-            c.setStrokeColorRGB(1, 1, 1)
-            c.setFillColorRGB(1, 1, 1)
-            c.rect(440, 605, 70, 30, fill=True)
-    except:
-        c.setStrokeColorRGB(1, 1, 1)
-        c.setFillColorRGB(1, 1, 1)
-        c.rect(440, 605, 70, 30, fill=True)
-
-
 
 
     c.showPage()
     c.save()
-    archivo_temporal.close()
 
     pdf = buffer.getvalue()
     buffer.seek(0)
     buffer.close()
 
+
     return pdf
-
-
 
 
 if __name__ == "__main__":
