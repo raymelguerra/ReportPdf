@@ -7,4 +7,3 @@ services:
       - "8009:8000"
     image: reportpdf:betav1
     container_name: reportpdf-container
-
