@@ -5,6 +5,7 @@ from datetime import datetime
 from io import BytesIO
 
 from reportlab.lib.units import inch
+from reportlab.lib.utils import ImageReader
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -235,11 +236,10 @@ def create_pdf(buffer, db_report, contractor_service_log,company):
     try:
         if contractor_service_log is not None:
             contractorsig = contractor_service_log.Signature
-            with tempfile.NamedTemporaryFile(delete=False) as archivo_temporal:
-                archivo_temporal.write(base64.b64decode(contractorsig))
-                ruta_imagen_temporal = archivo_temporal.name
-                c.drawImage(ruta_imagen_temporal, 440, 600, 70, 30)
-                archivo_temporal.close()
+            img_data = base64.b64decode(contractorsig)
+            img = ImageReader(BytesIO(img_data))
+            c.drawImage(img, 440, 600, 70, 30)
+
         else:
             c.setStrokeColorRGB(1, 1, 1)
             c.setFillColorRGB(1, 1, 1)
