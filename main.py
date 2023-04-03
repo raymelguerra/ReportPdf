@@ -237,7 +237,7 @@ def create_pdf(buffer, db_report, contractor_service_log,company):
                 archivo_temporal.write(base64.b64decode(contractorsig))
                 ruta_imagen_temporal = archivo_temporal.name
                 c.drawImage(ruta_imagen_temporal, 440, 600, 70, 30)
-                archivo_temporal.close()
+
         else:
             c.setStrokeColorRGB(1, 1, 1)
             c.setFillColorRGB(1, 1, 1)
