@@ -13,6 +13,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import Session
 
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi import HTTPException
 from fastapi import FastAPI, Depends
@@ -167,7 +168,14 @@ SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
+# Cors
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Dependency injection
 def get_db():
