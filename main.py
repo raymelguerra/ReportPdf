@@ -1,5 +1,6 @@
 import base64
 import io
+
 import tempfile
 from datetime import datetime
 from io import BytesIO
@@ -13,7 +14,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import Session
 
-from fastapi.responses import Response
+from fastapi.responses import FileResponse
 from fastapi import HTTPException
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -213,7 +214,7 @@ def read_report(id: int, db: Session = Depends(get_db)):
 
     headers = {'Content-Disposition': f'inline;filename=sala_{db_report}.pdf'}
 
-    return Response(content=pdf_bytes, media_type='application/pdf', headers=headers)
+    return FileResponse(pdf_bytes, filename="pdf_report.pdf",media_type='application/pdf', headers=headers)
 
 
 def create_pdf(buffer, db_report, contractor_service_log,company):
