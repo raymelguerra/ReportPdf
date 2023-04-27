@@ -212,9 +212,12 @@ def read_report(id: int, db: Session = Depends(get_db)):
                                .filter(ServiceLog.Id==id).first()
     pdf_bytes = create_pdf(BytesIO(), db_report, contractor_service_log,company)
 
+    with open("pdf_report.pdf", mode="wb") as f:
+        f.write(pdf_bytes)
+
     headers = {'Content-Disposition': f'inline;filename=sala_{db_report}.pdf'}
 
-    return FileResponse(pdf_bytes, filename="pdf_report.pdf",media_type='application/pdf', headers=headers)
+    return FileResponse("pdf_report.pdf",media_type='application/pdf', headers=headers)
 
 
 def create_pdf(buffer, db_report, contractor_service_log,company):
