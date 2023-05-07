@@ -5,5 +5,5 @@ services:
     build: .
     ports:
       - "8009:8000"
-    image: reportpdf:betav1
+    image: reportpdf:latest
     container_name: reportpdf-container
