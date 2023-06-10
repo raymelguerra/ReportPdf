@@ -57,7 +57,7 @@ def create_pdf(buffer, db_report, contractor_service_log,company):
 
     width, height = A4
     data = [['Date', 'Arrival time', 'Depart time', 'Units', 'Hours', 'CPT Code',
-             'Visit at\n(1)home\n(2)Comunity\n(3)School', 'Behavior\nTherapist\nInitials',
+             'Visit at\n(1)home\n(2)Comunity\n(3)School',
              'Caregiver/Client\nSignature']]
 
     for unitdetail in db_report.unitdetails:
@@ -84,9 +84,9 @@ def create_pdf(buffer, db_report, contractor_service_log,company):
             imagen = ReportLabImage(imagen_reader, width=0.7 * inch, height=0.3 * inch)
             data.append([formatted_date, patient_unit.EntryTime, patient_unit.DepartureTime,
                          patient_unit.unitdetailp.Unit, hours, patient_unit.unitdetailp.subprocedure.Name,
-                         patient_unit.unitdetailp.placeofservice.Value, '', imagen])
+                         patient_unit.unitdetailp.placeofservice.Value, imagen])
     #
-    t = Table(data, colWidths=[70] + [60] * 2 + [40] + [60] * 4 + [80])
+    t = Table(data, colWidths=[70] + [60] * 2 + [40] + [60] * 3 + [80])
     t.setStyle([("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                 ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
@@ -100,7 +100,7 @@ def create_pdf(buffer, db_report, contractor_service_log,company):
 
     t.wrapOn(c, width, height)
     t.autoColumnWidths = True
-    t.drawOn(c, 20, 450)
+    t.drawOn(c, 40, 450)
 
     # Nuevo
     styles = getSampleStyleSheet()
