@@ -7,7 +7,8 @@ from fastapi import HTTPException
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from db_conection.settings import get_db
-from models.schemas import ServiceLog,ContractorServiceLog,Contractor,ContractorType,PlaceOfService,Period,Client,Payroll,Company,UnitDetail,PatientUnitDetail,SubProcedure
+from models.schemas import ServiceLog, ContractorServiceLog, Contractor, ContractorType, PlaceOfService, Period, Client, \
+    Payroll, Company, UnitDetail, PatientUnitDetail, SubProcedure, Agreement
 from pdf_print import create_pdf
 app = FastAPI()
 # Cors
@@ -43,10 +44,18 @@ def read_report(id: int, db: Session = Depends(get_db)):
     if db_report is None:
         raise HTTPException(status_code=404, detail="Report not found")
     contractor_service_log = db.query(ContractorServiceLog).filter(ContractorServiceLog.ServiceLogId == id).first()
-    company = db.query(Company).join(Payroll, Payroll.CompanyId ==Company.Id,isouter=True) \
-                               .join(Contractor, Contractor.Id ==Payroll.ContractorId , isouter=True) \
-                               .join(ServiceLog,ServiceLog.ContractorId ==Contractor.Id, isouter=True) \
-                               .filter(ServiceLog.Id==id).first()
+    #company = db.query(Company).join(Agreement, Agreement.CompanyId ==Company.Id,isouter=True) \
+    #                            .join(Payroll, Payroll.Id == Agreement.PayrollId, isouter=True) \
+    #                            .join(Contractor, Contractor.Id ==Payroll.ContractorId , isouter=True) \
+    #                           .join(ServiceLog,ServiceLog.ContractorId ==Contractor.Id, isouter=True) \
+    #                           .join(Client, Client.Id == ServiceLog.ClientId, isouter=True) \
+    #                           .filter(ServiceLog.Id==id,).first()
+    agreement = db.query(Agreement).join(ServiceLog, ServiceLog.ClientId == Agreement.ClientId) \
+                                   .filter(ServiceLog.Id ==id).first()
+    if agreement:
+        company = db.query(Company).filter(Company.Id==agreement.CompanyId).first()
+    else:
+        raise Exception("Dont have company")
     pdf_bytes = create_pdf(BytesIO(), db_report, contractor_service_log,company)
 
     with open("pdf_report.pdf", mode="wb") as f:
