@@ -51,6 +51,7 @@ class Client(Base):
     Name = Column(String)
 
     servicelogL = relationship("ServiceLog", back_populates="client")
+    agreement = relationship("Agreement", back_populates="client")
 
 
 class UnitDetail(Base):
@@ -118,6 +119,7 @@ class Payroll(Base):
     procedure = relationship("Procedure", back_populates="payroll")
     CompanyId = Column(Integer, ForeignKey('Company.Id'))
     company = relationship("Company", back_populates="payroll")
+    agreement = relationship("Agreement", back_populates="payroll")
 
 
 class ContractorType(Base):
@@ -134,4 +136,14 @@ class Company(Base):
     Acronym = Column(String)
     Enabled = Column(Boolean)
     payroll = relationship("Payroll", back_populates="company")
+    agreement=relationship("Agreement", back_populates="company")
 
+class Agreement(Base):
+    __tablename__= "Agreement"
+    Id = Column(Integer, primary_key=True, index=True)
+    ClientId = Column(Integer, ForeignKey('Client.Id'))
+    CompanyId =Column(Integer, ForeignKey('Company.Id'))
+    PayrollId = Column(Integer, ForeignKey('Payroll.Id'))
+    company = relationship("Company", back_populates="agreement")
+    payroll = relationship("Payroll", back_populates="agreement")
+    client = relationship("Client", back_populates="agreement")
