@@ -5,7 +5,7 @@ fastapi==0.95.0
 greenlet==2.0.2
 h11==0.14.0
 httptools==0.5.0
-idna==3.4
+idna==3.7
 Pillow==9.4.0
 databases[postgresql]
 psycopg2-binary
