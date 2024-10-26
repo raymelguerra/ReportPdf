@@ -9,7 +9,7 @@ idna==3.4
 Pillow==9.4.0
 databases[postgresql]
 psycopg2-binary
-pydantic==1.10.7
+pydantic==1.10.13
 python-dotenv==1.0.0
 PyYAML==6.0
 reportlab==3.6.12
